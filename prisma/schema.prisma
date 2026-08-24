@@ -1,0 +1,214 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AppUser {
+  id                 String                  @id @default(cuid())
+  email              String                  @unique
+  name               String                  @default("")
+  image              String                  @default("")
+  emailVerified      DateTime?
+  profiles           UserProfile[]
+  healthLogs         HealthLog[]
+  reminders          Reminder[]
+  calendarEvents     CalendarEvent[]
+  activityLogs       ActivityLog[]
+  wellnessEntries    WellnessEntry[]
+  chatMessages       ChatMessage[]
+  chatConversations  ChatConversation[]
+  aiPreference       AiPreference?
+  knowledgeChunks    HealthKnowledgeChunk[]
+  generationAttempts ChatGenerationAttempt[]
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+}
+
+model UserProfile {
+  id              String   @id @default(cuid())
+  name            String   @default("User")
+  email           String   @default("")
+  age             Int      @default(25)
+  lifeStage       String   @default("reproductive")
+  avatar          String   @default("")
+  theme           String   @default("light")
+  accentColor     String   @default("rose")
+  notifications   Boolean  @default(true)
+  cycleLength     Int      @default(28)
+  lastPeriodStart String   @default("")
+  healthGoals     String   @default("")
+  bio             String   @default("")
+  location        String   @default("")
+  userId          String   @unique
+  user            AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model HealthLog {
+  id          String   @id @default(cuid())
+  date        String
+  mood        Int      @default(5)
+  energy      Int      @default(5)
+  sleep       Int      @default(5)
+  stress      Int      @default(5)
+  pain        Int      @default(0)
+  symptoms    String   @default("")
+  notes       String   @default("")
+  waterIntake Int      @default(0)
+  exercise    String   @default("")
+  weight      Float    @default(0)
+  userId      String
+  user        AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, date])
+}
+
+model Reminder {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @default("")
+  time        String
+  frequency   String   @default("daily")
+  category    String   @default("health")
+  active      Boolean  @default(true)
+  userId      String
+  user        AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model CalendarEvent {
+  id        String   @id @default(cuid())
+  title     String
+  date      String
+  endDate   String   @default("")
+  type      String   @default("general")
+  notes     String   @default("")
+  color     String   @default("#F9A8D4")
+  userId    String
+  user      AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, date])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  action    String
+  category  String   @default("general")
+  details   String   @default("")
+  userId    String
+  user      AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model WellnessEntry {
+  id           String   @id @default(cuid())
+  date         String
+  meditation   Int      @default(0)
+  gratitude    String   @default("")
+  affirmations String   @default("")
+  selfCare     String   @default("")
+  journalEntry String   @default("")
+  userId       String
+  user         AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId, date])
+}
+
+model ChatMessage {
+  id             String            @id @default(cuid())
+  role           String
+  content        String
+  provider       String            @default("")
+  model          String            @default("")
+  mode           String            @default("local-risk-assistant")
+  citations      Json?
+  status         String            @default("completed")
+  conversationId String?
+  conversation   ChatConversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           AppUser           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime          @default(now())
+
+  @@index([userId, createdAt])
+  @@index([conversationId, createdAt])
+}
+
+model ChatConversation {
+  id        String                  @id @default(cuid())
+  title     String                  @default("New conversation")
+  userId    String
+  user      AppUser                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  ChatMessage[]
+  attempts  ChatGenerationAttempt[]
+  createdAt DateTime                @default(now())
+  updatedAt DateTime                @updatedAt
+
+  @@index([userId, updatedAt])
+}
+
+model AiPreference {
+  id             String    @id @default(cuid())
+  cloudAiEnabled Boolean   @default(false)
+  consentVersion String    @default("")
+  consentedAt    DateTime?
+  decisionAt     DateTime?
+  userId         String    @unique
+  user           AppUser   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model HealthKnowledgeChunk {
+  id             String                      @id @default(cuid())
+  sourceType     String
+  sourceId       String
+  sourceDate     DateTime?
+  title          String
+  content        String
+  metadata       Json?
+  contentHash    String
+  embedding      Unsupported("vector(768)")?
+  embeddingModel String                      @default("")
+  searchVector   Unsupported("tsvector")?    @default(dbgenerated()) @map("search_vector")
+  userId         String
+  user           AppUser                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime                    @default(now())
+  updatedAt      DateTime                    @updatedAt
+
+  @@unique([userId, sourceType, sourceId])
+  @@index([userId, sourceDate])
+  @@index([userId, sourceType])
+}
+
+model ChatGenerationAttempt {
+  id             String           @id @default(cuid())
+  provider       String
+  model          String
+  status         String
+  latencyMs      Int              @default(0)
+  errorCode      String           @default("")
+  conversationId String
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           AppUser          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime         @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([userId, createdAt])
+}
