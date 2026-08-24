@@ -1,3 +1,12 @@
+# NariAid
+
+NariAid is a private cycle and wellness tracker. It keeps health logs, symptoms, sleep, stress, pain, wellness notes, reminders, and cycle events in PostgreSQL. Ask Nari can now search those records before it answers, so it is not just guessing from one giant prompt anymore.
+
+That is the big idea here. Most health chats forget what you tracked or dump everything into an AI request. NariAid uses SQL to find only the most useful records, adds FedCycle pattern guidance, and shows the record labels it used. It feels way more personal, but it is also easier to check.
+
+## Run the app
+
+Run these to start:
 ```bash
 cd NariAid-main
 npm install
@@ -8,12 +17,6 @@ npm run dev
 ```
 
 Open `http://localhost:3000`, sign in with Google, and you are good to go.
-
-# NariAid
-
-NariAid is a private cycle and wellness tracker. It keeps health logs, symptoms, sleep, stress, pain, wellness notes, reminders, and cycle events in PostgreSQL. Ask Nari can now search those records before it answers, so it is not just guessing from one giant prompt anymore.
-
-That is the big idea here. Most health chats forget what you tracked or dump everything into an AI request. NariAid uses SQL to find only the most useful records, adds FedCycle pattern guidance, and shows the record labels it used. It feels way more personal, but it is also easier to check.
 
 ## Add the environment values
 
